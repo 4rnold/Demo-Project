@@ -91,11 +91,10 @@ public class BigpipeTaskReturnValueHandler implements
 
         final DeferredResult<Void> deferredResult = new DeferredResult<Void>();
 
-        //??设置这个就是最终的处理类了，处理完不再去找下一个类进行处理
         //设置请求已处理
         mavContainer.setRequestHandled(true);
 
-        //??异步处理
+        //异步处理,DeferredResultMethodReturnValueHandler中的操作
         WebAsyncUtils.getAsyncManager(request).startDeferredResultProcessing(deferredResult, mavContainer);
 
         final BigPipeContext context = new BigPipeContext(request.getContextPath(), bigPipeTask.getModel());
