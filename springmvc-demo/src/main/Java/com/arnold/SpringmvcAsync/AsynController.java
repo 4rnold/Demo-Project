@@ -46,6 +46,7 @@ public class AsynController {
     @RequestMapping(value = "/spirngasyn" , produces="text/plain;charset=UTF-8")
     public WebAsyncTask<String> longTimeTask() {
         System.out.println("/spirngasyn被调用 thread id is : " + Thread.currentThread().getId());
+
         Callable<String> callable = new Callable<String>() {
             public String call() throws Exception {
                 Thread.sleep(3000); // 假设是一些长时间任务
