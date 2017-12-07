@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="contentNegotiationManager"
+          class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean"
+          p:ignoreAcceptHeader="true"
+          p:favorPathExtension="false"
+          p:favorParameter="true"
+          p:parameterName="format"
+          p:defaultContentType="text/html">
+        <property name="mediaTypes">
+            <value>
+                html=text/html
+                xml=application/xml
+                json=application/json
+            </value>
+        </property>
+    </bean>
+    <!-- 协商多种视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver" p:order="0">
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <property name="defaultViews">
+            <list>
+                <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"
+                      p:modelKeys="userList"/>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView"
+                      p:modelKey="userList" p:marshaller-ref="xmlMarshaller"/>
+            </list>
+        </property>
+    </bean>
+</beans>

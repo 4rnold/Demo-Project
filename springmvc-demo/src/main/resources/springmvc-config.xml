@@ -3,25 +3,108 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mvc="http://www.springframework.org/schema/mvc"
-       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:task="http://www.springframework.org/schema/task" xmlns:p="http://www.springframework.org/schema/p"
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
        ">
+    <!--<import resource="classpath*:**/*-partConfig.xml"/>-->
 
     <context:component-scan base-package="com.arnold.*"/>
+    <!--<mvc:annotation-driven/>-->
 
-    <mvc:annotation-driven/>
+    <bean id="conversionService"
+          class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <!--<bean class="StringToUserConverter"/>-->
+            </set>
+        </property>
+    </bean>
+<!--顺序问题？？-->
+    <mvc:annotation-driven conversion-service="conversionService">
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.BufferedImageHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+
+            <bean class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter"/>
+
+            <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter"
+                  p:marshaller-ref="xmlMarshaller" p:unmarshaller-ref="xmlMarshaller"></bean>
+
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+
+
+    <bean id="contentNegotiationManager"
+          class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean"
+          p:ignoreAcceptHeader="true"
+          p:favorPathExtension="false"
+          p:favorParameter="true"
+          p:parameterName="format"
+          p:defaultContentType="text/html">
+        <property name="mediaTypes">
+            <value>
+                html=text/html
+                xml=application/xml
+                json=application/json
+            </value>
+        </property>
+    </bean>
+    <!-- 协商多种视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver" p:order="0">
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <property name="defaultViews">
+            <list>
+                <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"
+                      p:modelKeys="userList"/>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView"
+                      p:modelKey="userList" p:marshaller-ref="xmlMarshaller"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="xmlMarshaller" class="org.springframework.oxm.xstream.XStreamMarshaller">
+        <property name="streamDriver">
+            <bean class="com.thoughtworks.xstream.io.xml.StaxDriver"/>
+        </property>
+        <property name="encoding" >
+            <value>GBK</value>
+        </property>
+        <property name="annotatedClasses">
+            <list>
+                <value>com.arnold.web.XmlAndJsonRequest.domain.User</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="10"/>
+    <bean id="userListExcel" class="com.arnold.web.CustomView.UserListExcelView"/>
 
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="order" value="100"/>
         <property name="prefix" value="/WEB-INF/jsp/" />
         <property name="suffix" value=".jsp" />
     </bean>
 
+    <bean id="userListXml"
+          class="org.springframework.web.servlet.view.xml.MarshallingView"
+          p:modelKey="userList" p:marshaller-ref="xmlMarshaller"/>
+
     <mvc:default-servlet-handler/>
     <mvc:resources mapping="/static/**" location="/WEB-INF/static/"/>
+
+
+
+    <import resource="FreeMarker-config.xml"/>
+    <import resource="i18n-config.xml"/>
+
+    <!--<import resource="ContentNegotiate-config.xml"/>-->
 
 
 </beans>

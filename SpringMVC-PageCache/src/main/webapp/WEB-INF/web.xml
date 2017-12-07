@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+
+    <!-- Context ConfigLocation -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath*:/spring-context*.xml</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+
+    <!--redis缓存过滤器-->
+    <filter>
+        <filter-name>pageCacheFilter</filter-name>
+        <filter-class>com.arnold.filter.CacheFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>pageCacheFilter</filter-name>
+        <url-pattern>/redis/*</url-pattern>
+    </filter-mapping>
+
+    <!--ehcache 页面缓存过滤器-->
+    <filter>
+        <filter-name>PageCachingFilter</filter-name>
+        <filter-class>net.sf.ehcache.constructs.web.filter.SimplePageCachingFilter</filter-class>
+        <!--init-param 部分，如果是使用默认的配置，可以不用写，默认为SimplePageCachingFilter，如果需要指定自定义的缓存则需要init-param部分是必须指定的，param-value就是自定义的缓存名称-->
+        <init-param>
+            <param-name>cacheName</param-name>
+            <param-value>pageCachingFilter</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>PageCachingFilter</filter-name>
+        <!--配置需要缓存的页面-->
+        <url-pattern>/ehcache/*</url-pattern>
+    </filter-mapping>
+
+<!--    <filter>
+        <filter-name>PageCacheFilter</filter-name>
+        <filter-class>com.arnold.filter.PageCachingFilter</filter-class>
+        <init-param>
+            <param-name>cacheName</param-name>
+            <param-value>pageCachingFilter</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>PageCacheFilter</filter-name>
+        <url-pattern>/</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>PageCacheFilter</filter-name>
+        <url-pattern>*.html</url-pattern>
+    </filter-mapping>-->
+
+    <!-- 缓存、gzip压缩核心过滤器 -->
+<!--
+    <filter>
+        <filter-name>PageEhCacheFilter</filter-name>
+        <filter-class>com.arnold.filter.PageEhCacheFilter</filter-class>
+        <init-param>
+            <param-name>patterns</param-name>
+            &lt;!&ndash; 配置你需要缓存的url &ndash;&gt;
+            <param-value>/cache.jsp, product.action, market.action </param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>PageEhCacheFilter</filter-name>
+        <url-pattern>*.action</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>PageEhCacheFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+-->
+
+    <servlet>
+        <servlet-name>DispatcherServlet</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:springmvc-config.xml</param-value>
+
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>DispatcherServlet</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+
+
+
+
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/views/error/500.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/error/404.jsp</location>
+    </error-page>
+
+
+</web-app>
