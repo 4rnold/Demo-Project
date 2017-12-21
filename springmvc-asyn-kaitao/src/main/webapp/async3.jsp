@@ -31,7 +31,7 @@ var comet = {
             comet.connection.open();
             comet.connection.write(
                     "<html><script>" +
-                            "document.domain='" + document.domain + "';" +
+                            "document._domain='" + document.domain + "';" +
                             "</html>");
             comet.connection.close();
 

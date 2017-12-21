@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供-->
+    <bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://10.0.0.2:61616"/>
+        <!--设置信任的包名-->
+        <property name="trustAllPackages" value="true"/>
+
+    </bean>
+    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
+        <property name="connectionFactory" ref="targetConnectionFactory"/>
+        <property name="maxConnections" value="10"/>
+    </bean>
+    <bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+        <property name="targetConnectionFactory" ref="pooledConnectionFactory"/>
+    </bean>
+
+    <!--配置生产者-->
+
+    <!-- Spring提供的JMS工具类，它可以进行消息发送、接收等 -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <!-- 这个connectionFactory对应的是我们定义的Spring提供的那个ConnectionFactory对象 -->
+        <!--发消息往哪里发-->
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <!-- 消息转换器 -->
+        <property name="messageConverter" ref="emailMessageConverter"/>
+    </bean>
+
+    <!--这个是队列目的地，点对点的-->
+   <!-- <bean id="queueDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>queue</value>
+        </constructor-arg>
+    </bean>
+    &lt;!&ndash;这个是主题目的地，一对多的&ndash;&gt;
+    <bean id="topicDestination" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg value="topic"/>
+    </bean>-->
+
+    <bean id="adapterQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>adapterQueue</value>
+        </constructor-arg>
+    </bean>
+
+
+    <!-- 类型转换器 -->
+    <bean id="emailMessageConverter" class="com.arnold.jms.MessageConverter.converter.EmailMessageConverter"/>
+
+
+
+
+
+
+    <!--方式一：ConsumerObjMessageListener-->
+
+    <!-- 自定义消息监听 -->
+    <!--<bean id="consumerObjMessageListener" class="com.arnold.jms.MessageConverter.listener.ConsumerObjMessageListener">
+        <property name="emailMessageConverter" ref="emailMessageConverter"/>
+    </bean>
+
+    &lt;!&ndash; 消息监听适配器对应的监听容器 &ndash;&gt;
+    <bean id="objMessageListenerAdapterContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="adapterQueue"/>
+        &lt;!&ndash;         <property name="messageListener" ref="objMessageListenerAdapter"/> &ndash;&gt;
+        <property name="messageListener" ref="consumerObjMessageListener"/>
+    </bean>-->
+
+
+    <!--方式二：自动转换消息到指定bean的指定方法-->
+
+    <!-- MessageListenerAdapter 消息监听 -->
+    <!--不用手动注入MessageConverter，设置MessageConverter，自动调用。-->
+    <!--emailMessageConverter 将消息转换后给 ConsumerListener.receiveMessage-->
+    <bean id="objMessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <!--代理了listener-->
+        <property name="delegate">
+            <bean class="com.arnold.jms.MessageConverter.listener.ConsumerListener"/>
+        </property>
+        <property name="defaultListenerMethod" value="receiveMessage"/>
+        <property name="messageConverter" ref="emailMessageConverter"/>
+    </bean>
+
+
+    <!-- 消息监听适配器对应的监听容器 -->
+    <bean id="objMessageListenerAdapterContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="adapterQueue"/>
+        <!--         <property name="messageListener" ref="objMessageListenerAdapter"/> -->
+        <property name="messageListener" ref="objMessageListenerAdapter"/>
+    </bean>
+
+</beans>
